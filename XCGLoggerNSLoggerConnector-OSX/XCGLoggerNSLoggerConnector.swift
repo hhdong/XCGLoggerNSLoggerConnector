@@ -1,16 +1,25 @@
 //
+//  XCGLoggerNSLoggerConnector.swift
+//  XCGLoggerNSLoggerConnector
+//
+//  Created by code8 on 2017/1/30.
+//  Copyright © 2017年 Markus Winkler. All rights reserved.
+//
+
+import Foundation
+//
 //  XCGLoggerSupport.swift
 //  adds support for NSLogger in XCGLogger
 //
 //  add the line below to the init code in appDelegate
 //  log.addLogDestination(XCGNSLoggerLogDestination(owner: log, identifier: "nslogger.identifier", addInlineDebugInfo: false))
 //
-//  New custom image level, accepts UIImage
+//  New custom image level, accepts NSImage
 //  Label is default set to "image", can be used to indicate e.g. source ("facebook", "imgur")
 //  -- log.image(image)
 //  -- log.image(image, label: "facebook")
 //
-//  All report levels support now UIImage
+//  All report levels support now NSImage
 //  -- log.info(image)
 //
 //  New custom text report level to group functional reports
@@ -75,7 +84,7 @@ public class XCGNSLoggerLogDestination: BaseDestination {
 }
 
 public extension XCGLogger {
-
+    
     // declared here again for performance reasons
     private func convertLogLevel(_ level:XCGLogger.Level) -> Int32 {
         switch(level) {
@@ -95,19 +104,21 @@ public extension XCGLogger {
             return 3
         }
     }
-
-    public func sendImageToNSLogger(_ image: UIImage?, level: Level, label: String, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func sendImageToNSLogger(_ image: NSImage?, level: Level, label: String, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         // check if image is valid, otherwise display error
-        if let image: UIImage = image {
-            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
+        if let image: NSImage = image {
+            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), image.tiffRepresentation)
+            
+            
             self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
         else {
             self.logln(level, functionName: functionName, fileName: fileName, lineNumber: lineNumber, closure: {return "Invalid Image: \(image)"})
         }
     }
-
-    public func customLabel( closure: @autoclosure () -> UIImage?, label: String = "image", functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func customLabel( closure: @autoclosure () -> NSImage?, label: String = "image", functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         // check if image is valid, otherwise display error
         var arr = fileName.components(separatedBy: "/")
         var fileName2 = fileName
@@ -115,8 +126,8 @@ public extension XCGLogger {
             fileName2 = last
         }
         let level = XCGLogger.Level.none
-        if let image: UIImage = closure() {
-            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), UIImagePNGRepresentation(image))
+        if let image: NSImage = closure() {
+            LogImageDataF(fileName, Int32(lineNumber), functionName, label, convertLogLevel(level), Int32(image.size.width), Int32(image.size.height), image.tiffRepresentation)
             LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "\(image)", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Image: \(image)"})
         }
@@ -124,7 +135,7 @@ public extension XCGLogger {
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "Invalid Image: \(closure())"})
         }
     }
-
+    
     public func customLabel(closure: @autoclosure () -> String?, label: String = "string", functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.none
         var arr = fileName.components(separatedBy: "/")
@@ -132,7 +143,7 @@ public extension XCGLogger {
         if let last = arr.popLast() {
             fileName2 = last
         }
-
+        
         if let message = closure() {
             LogMessageF_va(fileName, Int32(lineNumber), functionName, label, Int32(convertLogLevel(level)), "\(message)", getVaList([]))
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "[\(label)] \(message)"})
@@ -143,35 +154,35 @@ public extension XCGLogger {
             self.logln(level, functionName: functionName, fileName: fileName2, lineNumber: lineNumber, closure: {return "[\(label)] nil"})
         }
     }
-
-    public func verbose(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func verbose(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.verbose
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
-    public func debug(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func debug(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.debug
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
-    public func info(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func info(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.info
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
-    public func warning(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func warning(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.warning
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
-    public func error(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func error(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.error
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
-    public func severe(closure: @autoclosure () -> UIImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
+    
+    public func severe(closure: @autoclosure () -> NSImage?, functionName: String = #function, fileName: String = #file, lineNumber: Int = #line) {
         let level = XCGLogger.Level.severe
         sendImageToNSLogger(closure(), level: level, label: level.description, functionName: functionName, fileName: fileName, lineNumber: lineNumber)
     }
-
+    
 }

@@ -1,5 +1,5 @@
 framework module NSLogger {
-  umbrella header "NSLogger-umbrella.h"
+  umbrella header "NSLogger-OSX-umbrella.h"
 
   export *
   module * { export * }
